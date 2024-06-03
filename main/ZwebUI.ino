@@ -2425,6 +2425,39 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           break;
         }
 #  endif
+#  ifdef ZactuatorBlindT6
+        case webUIHash("MQTTtoBlindT6"): {
+          String line1 = "";
+          if (data.containsKey("command")) {
+            line1 = "Command: ";
+            line1 += data["command"].as<String>();
+          }
+          line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
+
+          String line2 = "";
+          if (data.containsKey("light")) {
+            line2 = "Light: ";
+            line2 += data["light"].as<bool>() ? "ON" : "OFF";
+          }
+          line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+
+          String line3 = "";
+          if (data.containsKey("closed")) {
+            line3 = "Status: ";
+            line3 += data["closed"].as<bool>() ? "CLOSE" : "NOT CLOSED";
+          }
+          line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
+
+          String line4 = "";
+          line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
+
+          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+            free(message);
+          }
+        }
+        break;
+# endif
         default:
           Log.verbose(F("[ WebUI ] unhandled topic %s" CR), message->title);
           free(message);
