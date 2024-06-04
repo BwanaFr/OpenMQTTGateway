@@ -33,8 +33,28 @@
 #define T6_CMD_STOP 0x55
 #define T6_CMD_LIGHT 0x0F
 
+#define T6_PUB_PERIOD 1000
+
+// #define T6_CLOSED_SWITCH_PIN 34
+// #define T6_OPEN_SWITCH_PIN 35
+// #define T6_LED_ON_PIN 14
+
 uint32_t blindT6_id = T6_ID;
 uint32_t blindT6_unit = T6_UNIT;
+unsigned long blindT6_lastRead = 0;
+
+#ifdef T6_CLOSED_SWITCH_PIN
+bool blindT6_ClosedSwitchState = false;
+#endif
+
+#ifdef T6_OPEN_SWITCH_PIN
+bool blindT6_OpenSwitchState = false;
+#endif
+
+#ifdef T6_LED_ON_PIN
+bool blindT6_LightState = false;
+#endif
+
 
 void pulseT6(bool value, uint32_t us)
 {
@@ -98,17 +118,19 @@ void sendCommandT6(uint8_t command)
 
 void setupBlindT6()
 {
-    //Nothing really important to setup
+    //Setup I/O if set in configuration
+#ifdef T6_CLOSED_SWITCH_PIN
+    pinMode(T6_CLOSED_SWITCH_PIN, INPUT_PULLUP);
+#endif
+#ifdef T6_OPEN_SWITCH_PIN
+    pinMode(T6_OPEN_SWITCH_PIN, INPUT_PULLUP);
+#endif
+#ifdef T6_LED_ON_PIN
+    pinMode(T6_LED_ON_PIN, INPUT);
+#endif
     Log.trace(F("ZactuatorBlindT6 setup done " CR));
 }
 
-void blindT6toMQTT()
-{
-    StaticJsonDocument<JSON_MSG_BUFFER> dataBuffer;
-    JsonObject valueData = dataBuffer.to<JsonObject>();
-    valueData["closed"] = false;
-    pub(subjectBlindT6toMQTT, valueData);
-}
 
 void MQTTtoBlindT6(char* topicOri, char* datacallback)
 {
@@ -122,7 +144,7 @@ void MQTTtoBlindT6(char* topicOri, char* datacallback)
         }else if (strstr(datacallback, "stop") != NULL) {
             sendCommandT6(T6_CMD_STOP);
         }
-        blindT6toMQTT();
+        stateBlindT6Measures();
     }
 }
 
@@ -148,9 +170,56 @@ void MQTTtoBlindT6(char* topicOri, JsonObject& jsonData)
                 sendCommandT6(T6_CMD_STOP);
             }
         }
-        blindT6toMQTT();
+        blindT6_lastRead = 0;
+        stateBlindT6Measures();
     }
 }
 #endif
+
+void stateBlindT6Measures()
+{
+#if defined(T6_CLOSED_SWITCH_PIN) || defined(T6_OPEN_SWITCH_PIN) || defined(T6_LED_ON_PIN)
+    bool publish = false;
+    unsigned long now = millis();
+    if((now - blindT6_lastRead) >= T6_PUB_PERIOD){
+#ifdef T6_CLOSED_SWITCH_PIN
+        bool closedValue = digitalRead(T6_CLOSED_SWITCH_PIN);
+        if(closedValue != blindT6_ClosedSwitchState){
+            publish = true;
+        }
+        blindT6_ClosedSwitchState = closedValue;
+#endif
+#ifdef T6_OPEN_SWITCH_PIN
+        bool openValue = digitalRead(T6_OPEN_SWITCH_PIN);
+        if(openValue != blindT6_OpenSwitchState){
+            publish = true;
+        }
+        blindT6_OpenSwitchState = openValue;
+#endif
+#ifdef T6_LED_ON_PIN
+        bool lightValue = digitalRead(T6_LED_ON_PIN);
+        if(lightValue != blindT6_LightState){
+            publish = true;
+        }
+        blindT6_LightState = lightValue;
+#endif
+        if(publish){
+            StaticJsonDocument<JSON_MSG_BUFFER> dataBuffer;
+            JsonObject valueData = dataBuffer.to<JsonObject>();
+#ifdef T6_CLOSED_SWITCH_PIN
+            valueData["closed"] = closedValue;
+#endif
+#ifdef T6_OPEN_SWITCH_PIN
+            valueData["open"] = openValue;
+#endif
+#ifdef T6_LED_ON_PIN
+            valueData["light"] = lightValue;
+#endif
+            pub(subjectBlindT6toMQTT, valueData);
+        }
+        blindT6_lastRead = now;
+    }
+#endif
+}
 
 #endif

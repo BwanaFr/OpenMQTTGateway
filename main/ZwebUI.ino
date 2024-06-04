@@ -2444,7 +2444,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           String line3 = "";
           if (data.containsKey("closed")) {
             line3 = "Status: ";
-            line3 += data["closed"].as<bool>() ? "CLOSE" : "NOT CLOSED";
+            line3 += data["closed"].as<bool>() ? "CLOSED" : "NOT CLOSED";
           }
           line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
 

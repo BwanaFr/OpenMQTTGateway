@@ -7,9 +7,10 @@ extern void setupBlindT6();
 extern void blindT6toMQTT();
 extern void MQTTtoBlindT6(char* topicOri, char* datacallback);
 extern void MQTTtoBlindT6(char* topicOri, JsonObject& RFdata);
+extern void stateBlintT6Measures();
 
 #define subjectMQTTtoBlindT6    "/commands/MQTTtoBlindT6"
-#define subjectBlindT6toMQTT    "/MQTTtoBlindT6/status"
+#define subjectBlindT6toMQTT    "/BlindT6ToMQTT/status"
 #define subjectMQTTtoBlindT6set "/commands/MQTTtoBlindT6/config"
 
 #ifndef T6_ID
