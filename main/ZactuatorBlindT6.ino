@@ -18,15 +18,15 @@
     #error "Only SX1276 or SX1278 modules are supported!"
 #endif
 
-#define T6_ZERO_HIGH 400
-#define T6_ZERO_LOW 800
-#define T6_ONE_HIGH 800
-#define T6_ONE_LOW 300
-#define T6_START_HIGH 4200
-#define T6_START_LOW 1500
+#define T6_ZERO_HIGH 320
+#define T6_ZERO_LOW 768
+#define T6_ONE_HIGH 704
+#define T6_ONE_LOW 384
+#define T6_START_HIGH 4800
+#define T6_START_LOW 1536
 #define T6_TRY_DELAY 7800
 #ifndef T6_TRIES
-    #define T6_TRIES 1
+    #define T6_TRIES 2
 #endif
 #define T6_CMD_OPEN 0x33
 #define T6_CMD_CLOSE 0x11
@@ -59,6 +59,7 @@ void sendCommandT6(uint8_t command)
     //Gets datashaping from module (using SPI)
     int16_t dataShaping = radio.getMod()->SPIgetRegValue(RADIOLIB_SX127X_REG_PA_RAMP, 6, 5) >> 5;
     radio.setDataShapingOOK(0);
+
 #ifdef ONBOARD_LED
     digitalWrite(ONBOARD_LED, HIGH);
 #endif
@@ -118,6 +119,8 @@ void MQTTtoBlindT6(char* topicOri, char* datacallback)
             sendCommandT6(T6_CMD_CLOSE);
         }else if (strstr(datacallback, "light") != NULL) {
             sendCommandT6(T6_CMD_LIGHT);
+        }else if (strstr(datacallback, "stop") != NULL) {
+            sendCommandT6(T6_CMD_STOP);
         }
         blindT6toMQTT();
     }
@@ -141,6 +144,8 @@ void MQTTtoBlindT6(char* topicOri, JsonObject& jsonData)
                 sendCommandT6(T6_CMD_CLOSE);
             }else if (strstr(command, "light") != NULL) {
                 sendCommandT6(T6_CMD_LIGHT);
+            }else if (strstr(command, "stop") != NULL) {
+                sendCommandT6(T6_CMD_STOP);
             }
         }
         blindT6toMQTT();
