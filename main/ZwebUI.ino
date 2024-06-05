@@ -1,13 +1,13 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
 
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -394,7 +394,7 @@ bool exists(String path) {
 
 /**
  * @brief / - Page
- * 
+ *
  */
 void handleRoot() {
   WEBUI_TRACE_LOG(F("handleRoot: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -454,7 +454,7 @@ void handleRoot() {
 
 /**
  * @brief /CN - Configuration Page
- * 
+ *
  */
 void handleCN() {
   WEBUI_SECURE
@@ -688,7 +688,7 @@ void handleWI() {
  * T: handleMQ Arg: 0, mh=192.168.1.11
  * T: handleMQ Arg: 1, ml=1883
  * T: handleMQ Arg: 2, mu=1234
- * T: handleMQ Arg: 3, mp= 
+ * T: handleMQ Arg: 3, mp=
  * T: handleMQ Arg: 4, sc=on
  * T: handleMQ Arg: 5, h=
  * T: handleMQ Arg: 6, mt=home/
@@ -1185,7 +1185,7 @@ void handleRF() {
 
 /**
  * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
- * 
+ *
  */
 void handleRT() {
   WEBUI_TRACE_LOG(F("handleRT: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1222,7 +1222,7 @@ void handleRT() {
 #  if defined(ZgatewayCloud)
 /**
  * @brief /CL - Cloud Configuration
- * 
+ *
  */
 void handleCL() {
   WEBUI_TRACE_LOG(F("handleCL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1276,7 +1276,7 @@ void handleCL() {
 
 /**
  * @brief /TK - Receive Cloud Device Token
- * 
+ *
  */
 void handleTK() {
   WEBUI_TRACE_LOG(F("handleTK: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1319,7 +1319,7 @@ void handleTK() {
 
 /**
  * @brief /IN - Information Page
- * 
+ *
  */
 void handleIN() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1397,7 +1397,7 @@ void handleIN() {
 
 /**
  * @brief /handleFavicon - Send Favicon
- * 
+ *
  */
 void handleFavicon() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1408,7 +1408,7 @@ void handleFavicon() {
 #  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
 /**
  * @brief /UP - Firmware Upgrade Page
- * 
+ *
  */
 void handleUP() {
   WEBUI_TRACE_LOG(F("handleUP: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1494,7 +1494,7 @@ void sendRestartPage() {
 
 /**
  * @brief /CS - Serial Console and Command Line
- * 
+ *
  */
 void handleCS() {
   WEBUI_TRACE_LOG(F("handleCS: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1559,7 +1559,7 @@ void handleCS() {
 
 /**
  * @brief Page not found handler
- * 
+ *
  */
 void notFound() {
   WEBUI_SECURE

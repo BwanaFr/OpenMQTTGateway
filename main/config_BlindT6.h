@@ -22,3 +22,5 @@ extern void stateBlindT6Measures();
 #ifndef T6_UNIT
     #define T6_UNIT 0x5
 #endif
+
+#endif
