@@ -212,6 +212,9 @@ struct GfSun2000Data {};
 #ifdef ZactuatorBlindT6
 # include "config_BlindT6.h"
 #endif
+#ifdef ZactuatorEdonFan
+# include "config_EdonFan.h"
+#endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "config_M5.h"
 #endif
@@ -1272,6 +1275,10 @@ void setup() {
 #ifdef ZactuatorBlindT6
   setupBlindT6();
   modules.add(ZactuatorBlindT6);
+#endif
+#ifdef ZactuatorEdonFan
+  setupEdonFan();
+  modules.add(ZactuatorEdonFan);
 #endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
@@ -2546,6 +2553,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 # ifdef ZactuatorBlindT6
     MQTTtoBlindT6(topicOri, jsondata);
 # endif
+# ifdef ZactuatorEdonFan
+    MQTTtoEdonFan(topicOri, jsondata);
+#endif
 #  ifdef ZgatewayRS232
     MQTTtoRS232(topicOri, jsondata);
 #  endif
@@ -2589,6 +2599,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 # ifdef ZactuatorBlindT6
     MQTTtoBlindT6(topicOri, datacallback);
 # endif
+# ifdef ZactuatorEdonFan
+    MQTTtoEdonFan(topicOri, datacallback);
+#endif
 #ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, datacallback);
 #endif
