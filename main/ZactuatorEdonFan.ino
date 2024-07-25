@@ -38,6 +38,7 @@ uint8_t edonFan_Speed = 5;
 uint8_t edonFan_Timer = 0;
 Rotation edonFan_Rotation = DEG_ZERO;
 Mode edonFan_Mode = NORMAL;
+static unsigned long lastEdonRead = 0;
 
 uint16_t edonFanBuildCommand(bool startOn, bool stop)
 {
@@ -210,16 +211,17 @@ void MQTTtoEdonFan(char* topicOri, JsonObject& jsonData)
         if(sendCommand){
             edonFanSendCommand(edonFanBuildCommand(false, false));
         }
+        lastEdonRead = 0;
         stateEdonFanMeasures();
     }
 }
 
 void stateEdonFanMeasures()
 {
-    static unsigned long lastRead = 0;
+    
     unsigned long now = millis();
-    if((now - lastRead) >= EDON_PUB_PERIOD){
-        lastRead = now;
+    if((now - lastEdonRead) >= EDON_PUB_PERIOD){
+        lastEdonRead = now;
         StaticJsonDocument<JSON_MSG_BUFFER> dataBuffer;
         JsonObject valueData = dataBuffer.to<JsonObject>();
         valueData["state"] = edonFan_On ? "ON" : "OFF";
