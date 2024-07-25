@@ -20,14 +20,15 @@
 
 
 #define BIT_START_PULSE 372
-#define BIT_1_PULSE 1493
-#define BIT_0_PULSE 498
+#define BIT_0_PULSE 1493
+#define BIT_1_PULSE 498
 
 #define START_PREAMBLE_1 9201
 #define START_PREAMBLE_0 2614
 #define END_PULSE_0 4850
 
 #define SEND_TRIES 20
+#define EDON_PUB_PERIOD 10000
 
 enum Rotation {DEG_ZERO = 0, DEG_60, DEG_120, DEG_180};
 enum Mode {NORMAL = 0, NIGHT, BOOST, NATURAL_FLOW};
@@ -38,19 +39,25 @@ uint8_t edonFan_Timer = 0;
 Rotation edonFan_Rotation = DEG_ZERO;
 Mode edonFan_Mode = NORMAL;
 
-uint16_t edonFanBuildCommand(bool startOn)
+uint16_t edonFanBuildCommand(bool startOn, bool stop)
 {
     uint16_t ret = 0;
-    if(startOn){
-        ret |= (1 << 13);
+    if(stop){
+        ret = 0;
+        edonFan_On = false;
+    }else{
+        if(startOn){
+            edonFan_On = true;
+            ret |= (1 << 13);
+        }
+        if(edonFan_On){
+            ret |= (1 << 12);
+        }
+        ret |= ((edonFan_Mode & 0x3) << 10);
+        ret |= ((edonFan_Rotation & 0x3) << 8);
+        ret |= ((edonFan_Timer & 0xF) << 4);
+        ret |= (edonFan_Speed & 0xF);
     }
-    if(edonFan_On){
-        ret |= (1 << 12);
-    }
-    ret |= ((edonFan_Mode & 0x3) << 10);
-    ret |= ((edonFan_Rotation & 0x3) << 8);
-    ret |= ((edonFan_Timer & 0xF) << 4);
-    ret |= (edonFan_Speed & 0xF);
     return ret;
 }
 
@@ -61,8 +68,7 @@ void edonFanPulse(bool value, uint32_t us)
 }
 
 void edonFanSendBit(bool value)
-{
-    //Send pulse
+{    //Send pulse
     edonFanPulse(1, BIT_START_PULSE);
     edonFanPulse(0, value ? BIT_1_PULSE : BIT_0_PULSE);
 }
@@ -91,7 +97,7 @@ void edonFanSendCommand(uint16_t command)
         //Pulse low for ~2550us
         edonFanPulse(0, START_PREAMBLE_0);
         //Send start bit
-        edonFanSendBit(1);
+        edonFanSendBit(0);
         //Send the 15 bit command
         for(int i=14;i >= 0;--i){
             uint16_t cmd = (command >> i) & 0x1;
@@ -111,19 +117,6 @@ void edonFanSendCommand(uint16_t command)
 #endif
 }
 
-void edonFanSwitchOff()
-{
-    edonFan_On = false;
-    edonFanSendCommand(0x0);
-}
-
-void edonFanSwitchOn()
-{
-    edonFan_On = true;
-    edonFanSendCommand(edonFanBuildCommand(true));
-}
-
-
 void setupEdonFan()
 {
     //Nothing to setup here
@@ -139,9 +132,9 @@ void MQTTtoEdonFan(char* topicOri, char* datacallback)
         if(nbParams > 0){
             bool sendCommand = false;
             if (strstr(datacallback, "on") != NULL) {
-                edonFanSwitchOn();
+                edonFanSendCommand(edonFanBuildCommand(true, false));
             }else if (strstr(datacallback, "off") != NULL) {
-                edonFanSwitchOff();
+                edonFanSendCommand(edonFanBuildCommand(false, true));
             }else if ((strstr(datacallback, "speed") != NULL) && (nbParams > 1)) {
                 edonFan_Speed = value;
                 sendCommand = true;
@@ -155,9 +148,7 @@ void MQTTtoEdonFan(char* topicOri, char* datacallback)
                 edonFan_Timer = value;
                 sendCommand = true;
             }
-            if(sendCommand){
-                edonFanSendCommand(edonFanBuildCommand(false));
-            }
+            edonFanSendCommand(edonFanBuildCommand(false, false));
         }
     }
 }
@@ -210,15 +201,59 @@ void MQTTtoEdonFan(char* topicOri, JsonObject& jsonData)
 
         if(jsonData["on"]){
             sendCommand = false;
-            edonFanSwitchOn();
+            edonFanSendCommand(edonFanBuildCommand(true, false));
         }
         if(jsonData["off"]){
             sendCommand = false;
-            edonFanSwitchOff();
+            edonFanSendCommand(edonFanBuildCommand(false, true));
         }
         if(sendCommand){
-            edonFanSendCommand(edonFanBuildCommand(false));
+            edonFanSendCommand(edonFanBuildCommand(false, false));
         }
+        stateEdonFanMeasures();
+    }
+}
+
+void stateEdonFanMeasures()
+{
+    static unsigned long lastRead = 0;
+    unsigned long now = millis();
+    if((now - lastRead) >= EDON_PUB_PERIOD){
+        lastRead = now;
+        StaticJsonDocument<JSON_MSG_BUFFER> dataBuffer;
+        JsonObject valueData = dataBuffer.to<JsonObject>();
+        valueData["state"] = edonFan_On ? "ON" : "OFF";
+        switch(edonFan_Mode){
+            case NORMAL:
+                valueData["mode"] = "NORMAL";
+                break;
+            case NIGHT:
+                valueData["mode"] = "NIGHT";
+                break;
+            case BOOST:
+                valueData["mode"] = "BOOST";
+                break;
+            case NATURAL_FLOW:
+                valueData["mode"] = "NATURAL";
+                break;
+        }
+        switch(edonFan_Rotation){
+            case DEG_ZERO:
+                valueData["rotation"] = "ZERO";
+                break;
+            case DEG_60:
+                valueData["rotation"] = "60";
+                break;
+            case DEG_120:
+                valueData["rotation"] = "120";
+                break;
+            case DEG_180:
+                valueData["rotation"] = "180";
+                break;
+        }
+        valueData["speed"] = edonFan_Speed;
+        valueData["timer"] = edonFan_Timer;
+        pub(subjectEdonFantoMQTT, valueData);
     }
 }
 

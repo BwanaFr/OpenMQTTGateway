@@ -33,7 +33,7 @@
 #define T6_CMD_STOP 0x55
 #define T6_CMD_LIGHT 0x0F
 
-#define T6_PUB_PERIOD 1000
+#define T6_PUB_PERIOD 10000
 
 // #define T6_CLOSED_SWITCH_PIN 34
 // #define T6_OPEN_SWITCH_PIN 35
@@ -131,6 +131,18 @@ void setupBlindT6()
     Log.trace(F("ZactuatorBlindT6 setup done " CR));
 }
 
+void activateLight(bool state)
+{
+#ifdef T6_LED_ON_PIN
+    bool lightValue = digitalRead(T6_LED_ON_PIN);
+    if(state != lightValue){
+        sendCommandT6(T6_CMD_LIGHT);
+    }
+#else
+    //No feed back, toggle light
+    sendCommandT6(T6_CMD_LIGHT);
+#endif
+}
 
 void MQTTtoBlindT6(char* topicOri, char* datacallback)
 {
@@ -141,6 +153,10 @@ void MQTTtoBlindT6(char* topicOri, char* datacallback)
             sendCommandT6(T6_CMD_CLOSE);
         }else if (strstr(datacallback, "light") != NULL) {
             sendCommandT6(T6_CMD_LIGHT);
+        }else if (strstr(datacallback, "light_on") != NULL) {
+            activateLight(true);
+        }else if (strstr(datacallback, "light_off") != NULL) {
+            activateLight(false);
         }else if (strstr(datacallback, "stop") != NULL) {
             sendCommandT6(T6_CMD_STOP);
         }
@@ -166,6 +182,10 @@ void MQTTtoBlindT6(char* topicOri, JsonObject& jsonData)
                 sendCommandT6(T6_CMD_CLOSE);
             }else if (strstr(command, "light") != NULL) {
                 sendCommandT6(T6_CMD_LIGHT);
+            }else if (strstr(command, "light_on") != NULL) {
+                activateLight(true);
+            }else if (strstr(command, "light_off") != NULL) {
+                activateLight(false);
             }else if (strstr(command, "stop") != NULL) {
                 sendCommandT6(T6_CMD_STOP);
             }
@@ -203,6 +223,7 @@ void stateBlindT6Measures()
         }
         blindT6_LightState = lightValue;
 #endif
+        publish = true;
         if(publish){
             StaticJsonDocument<JSON_MSG_BUFFER> dataBuffer;
             JsonObject valueData = dataBuffer.to<JsonObject>();

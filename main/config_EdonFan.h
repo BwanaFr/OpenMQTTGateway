@@ -19,8 +19,10 @@
 extern void setupEdonFan();
 extern void MQTTtoEdonFan(char* topicOri, char* datacallback);
 extern void MQTTtoEdonFan(char* topicOri, JsonObject& RFdata);
-
+extern void stateEdonFanMeasures();
 
 #define subjectMQTTtoEdonFan    "/commands/MQTTtoEdonFan"
+#define subjectEdonFantoMQTT    "/EdonFanToMQTT/status"
+
 
 #endif //_EDON_FAN_H_

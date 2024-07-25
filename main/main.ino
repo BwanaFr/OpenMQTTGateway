@@ -2179,6 +2179,9 @@ void loop() {
 #ifdef ZactuatorBlindT6
     stateBlindT6Measures();
 #endif
+#ifdef ZactuatorEdonFan
+    stateEdonFanMeasures();
+#endif
 #ifdef ZgatewayRTL_433
       RTL_433Loop();
 #  ifdef ZmqttDiscovery
