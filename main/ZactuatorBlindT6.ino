@@ -217,7 +217,11 @@ void stateBlindT6Measures()
         blindT6_OpenSwitchState = openValue;
 #endif
 #ifdef T6_LED_ON_PIN
+#ifdef T6_LED_ON_INVERTED
+        bool lightValue = !digitalRead(T6_LED_ON_PIN);
+#else
         bool lightValue = digitalRead(T6_LED_ON_PIN);
+#endif
         if(lightValue != blindT6_LightState){
             publish = true;
         }
